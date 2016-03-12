@@ -18,6 +18,7 @@
 
 @implementation RCTMapboxGLManager
 
+
 RCT_EXPORT_MODULE();
 @synthesize bridge = _bridge;
 
@@ -43,7 +44,9 @@ RCT_EXPORT_MODULE();
              @"onLongPress",
              @"onFinishLoadingMap",
              @"onStartLoadingMap",
-             @"onLocateUserFailed"
+             @"onLocateUserFailed",
+             @"onProgressDidChange",
+             @"onMaxAllowedMapboxTiles"
              ];
 }
 
@@ -68,7 +71,8 @@ RCT_EXPORT_MODULE();
                      @"top": @(MGLAnnotationVerticalAlignmentTop),
                      @"center": @(MGLAnnotationVerticalAlignmentCenter),
                      @"bottom": @(MGLAnnotationVerticalAlignmentBottom)
-                     }
+                     },
+             @"UNKNOWN_RESOURCE_COUNT": @(UINT64_MAX)
              };
 };
 
@@ -164,6 +168,47 @@ RCT_CUSTOM_VIEW_PROPERTY(compassIsHidden, BOOL, RCTMapboxGL)
     BOOL value = [json boolValue];
     [view setCompassVisibility:value ? true : false];
 }
+
+RCT_EXPORT_METHOD(addPackForRegion:(nonnull NSNumber *)reactTag
+                  options:(NSDictionary*)options)
+{
+
+    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTMapboxGL *> *viewRegistry) {
+        RCTMapboxGL *mapView = viewRegistry[reactTag];
+        if ([mapView isKindOfClass:[RCTMapboxGL class]]) {
+            NSArray *b = [options valueForKey:@"bounds"];
+            MGLCoordinateBounds bounds = MGLCoordinateBoundsMake(CLLocationCoordinate2DMake([b[0] floatValue], [b[1] floatValue]), CLLocationCoordinate2DMake([b[2] floatValue], [b[3] floatValue]));
+            [mapView createOfflinePack:bounds style:[NSURL URLWithString:[options valueForKey:@"style"]] fromZoomLevel:[[options valueForKey:@"minZoomLevel"] floatValue] toZoomLevel:[[options valueForKey:@"maxZoomLevel"] floatValue] name:[options valueForKey:@"name"]];
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(getPacksWithCompletionHandler:(nonnull NSNumber *)reactTag
+                  findEvents:(RCTResponseSenderBlock)callback)
+{
+    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTMapboxGL *> *viewRegistry) {
+        RCTMapboxGL *mapView = viewRegistry[reactTag];
+        if ([mapView isKindOfClass:[RCTMapboxGL class]]) {
+            RCTMapboxGL *mapView = viewRegistry[reactTag];
+            NSMutableArray* callbackArray = [NSMutableArray new];
+            
+            [[MGLOfflineStorage sharedOfflineStorage] getPacksWithCompletionHandler:^(NSArray <MGLOfflinePack *> *packs, NSError *error) {
+                if (error != nil) {
+                    callback(@[@("Packs couldn’t be accessed for some reason.")]);
+                } else {
+                    for (MGLOfflinePack *pack in packs) {
+                        NSMutableDictionary *packDict = [NSMutableDictionary new];
+                        NSDictionary *userInfo = [NSKeyedUnarchiver unarchiveObjectWithData:pack.context];
+                        [packDict setObject:userInfo[@"name"] forKey:@"name"];
+                        [callbackArray addObject:packDict];
+                    }
+                }
+                callback(@[[NSNull null], callbackArray]);
+            }];
+        }
+    }];
+}
+
 
 RCT_EXPORT_METHOD(setZoomLevelAnimated:(nonnull NSNumber *)reactTag
                   zoomLevel:(double)zoomLevel)

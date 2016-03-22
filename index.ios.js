@@ -88,11 +88,11 @@ var MapView = React.createClass({
   _onLocateUserFailed(event: Event) {
     if (this.props.onLocateUserFailed) this.props.onLocateUserFailed(event.nativeEvent.src);
   },
-  _onProgressDidChange(event: Event) {
-    if (this.props.onProgressDidChange) this.props.onProgressDidChange(event.nativeEvent.src);
+  _onOfflineProgressDidChange(event: Event) {
+    if (this.props.onOfflineProgressDidChange) this.props.onOfflineProgressDidChange(event.nativeEvent.src);
   },
   __onMaxAllowedMapboxTiles(event: Event) {
-    if (this.props.onMaxAllowedMapboxTiles) this.props.onMaxAllowedMapboxTiles(event.nativeEvent.src);
+    if (this.props.onOfflineMaxAllowedMapboxTiles) this.props.onOfflineMaxAllowedMapboxTiles(event.nativeEvent.src);
   },
   propTypes: {
     showsUserLocation: React.PropTypes.bool,
@@ -147,8 +147,8 @@ var MapView = React.createClass({
     onLongPress: React.PropTypes.func,
     contentInset: React.PropTypes.array,
     userLocationVerticalAlignment: React.PropTypes.number,
-    onProgressDidChange: React.PropTypes.func,
-    onMaxAllowedMapboxTiles: React.PropTypes.func
+    onOfflineProgressDidChange: React.PropTypes.func,
+    onOfflineMaxAllowedMapboxTiles: React.PropTypes.func
   },
   getDefaultProps() {
     return {
@@ -182,8 +182,8 @@ var MapView = React.createClass({
         onFinishLoadingMap={this._onFinishLoadingMap}
         onStartLoadingMap={this._onStartLoadingMap}
         onLocateUserFailed={this._onLocateUserFailed}
-        onProgressDidChange={this._onProgressDidChange}
-        onMaxAllowedMapboxTiles={this._onMaxAllowedMapboxTiles} />
+        onOfflineProgressDidChange={this._onOfflineProgressDidChange}
+        onOfflineMaxAllowedMapboxTiles={this._onOfflineMaxAllowedMapboxTiles} />
     );
   }
 });

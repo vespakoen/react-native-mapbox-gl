@@ -111,8 +111,9 @@ RCT_EXPORT_MODULE();
     [self layoutSubviews];
 }
 
--(void)createOfflinePack:(MGLCoordinateBounds)bounds style:(NSURL*)style fromZoomLevel:(double)fromZoomLevel toZoomLevel:(double)toZoomLevel name:(NSString*)name
+-(void)createOfflinePack:(MGLCoordinateBounds)bounds style:(NSURL*)style fromZoomLevel:(double)fromZoomLevel toZoomLevel:(double)toZoomLevel name:(NSString*)name type:(NSString*)type
 {
+    
     id <MGLOfflineRegion> region = [[MGLTilePyramidOfflineRegion alloc] initWithStyleURL:style bounds:bounds fromZoomLevel:fromZoomLevel toZoomLevel:toZoomLevel];
     
     NSDictionary *userInfo = @{ @"name": name };
@@ -540,17 +541,27 @@ RCT_EXPORT_MODULE();
                                      }
                              };
     
-    [_eventDispatcher sendInputEventWithName:@"onProgressDidChange" body:event];
+    [_eventDispatcher sendInputEventWithName:@"onOfflineProgressDidChange" body:event];
 }
 
 - (void)offlinePack:(MGLOfflinePack *)pack didReceiveMaximumAllowedMapboxTiles:(uint64_t)maximumCount {
     NSDictionary *event = @{ @"target": self.reactTag,
                              @"src": @{
-                                     @"maximumCount": @true
+                                     @"maximumCount": @(maximumCount)
                                      }
                              };
-    [_eventDispatcher sendInputEventWithName:@"onMaxAllowedMapboxTiles" body:event];
+    [_eventDispatcher sendInputEventWithName:@"onOfflineMaxAllowedMapboxTiles" body:event];
 }
+
+- (void)offlinePack:(MGLOfflinePack *)pack didReceiveError:(nonnull NSError *)error {
+    NSDictionary *event = @{ @"target": self.reactTag,
+                             @"src": @{
+                                     @"error": [error localizedDescription]
+                                     }
+                             };
+    [_eventDispatcher sendInputEventWithName:@"onOfflineDidRecieveError" body:event];
+}
+
 
 - (void)mapView:(MGLMapView *)mapView didFailToLocateUserWithError:(NSError *)error
 {
